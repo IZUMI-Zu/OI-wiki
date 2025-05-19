@@ -17,13 +17,21 @@ jobs:
       issues: write # required for peter-evans/create-issue-from-file
     steps:
       - uses: actions/checkout@v4
+      # Cache lychee results (e.g. to avoid hitting rate limits)
+      - name: Restore lychee cache
+        uses: actions/cache@v4
+        with:
+          path: .lycheecache
+          key: cache-lychee-${{ github.sha }}
+          restore-keys: cache-lychee-
 
       - name: Link Checker
         id: lychee
         uses: lycheeverse/lychee-action@v2
         with:
           fail: false
-          args: |
+          args: >-
+            --cache
             --threads 4 
             --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" 
             --suggest --archive wayback
