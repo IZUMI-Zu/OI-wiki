@@ -23,11 +23,28 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           fail: false
+          args: |
+            --threads 4 
+            --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" 
+            --suggest --archive wayback
 
-      - name: Create Issue From File
-        if: steps.lychee.outputs.exit_code != 0
+      - name: Find Link Checker Issue
+        uses: micalevisk/last-issue-action@v2
+        id: link-checker-issue
+        with:
+            state: open
+            labels: |
+             link-checker
+
+      - name: Update Issue
+        if: steps.lychee.outputs.exit_code != 0 && steps.link-checker-issue.outputs.has-found == 'false'
         uses: peter-evans/create-issue-from-file@v5
         with:
-          title: Link Checker Report
-          content-filepath: ./lychee/out.md
-          labels: report, automated issue
+            title: Broken links detected in docs 🔗
+            # Update an existing issue if one was found (issue-number),
+            # otherwise an empty value creates a new issue:
+            issue-number: "${{ steps.link-checker-issue.outputs.issue_number }}"
+            content-filepath: ./lychee/out.md
+            token: ${{secrets.GITHUB_TOKEN}}
+            labels: |
+              link-checker
